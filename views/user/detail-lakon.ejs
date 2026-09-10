@@ -1,0 +1,99 @@
+<%- include('../partials/header') %>
+<div class="flex">
+  <%- include('../partials/sidebar') %>
+  <main class="flex-1 p-6 md:p-10 max-w-4xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <span class="badge <%= lakon.category==='fun'?'badge-fun':lakon.category==='digital'?'badge-digital':'badge-fisik' %> mb-3"><%= lakon.category %></span>
+      <h1 class="text-3xl font-black mb-3"><%= lakon.title %></h1>
+      <div class="flex flex-wrap gap-4 text-sm text-text2 mb-4">
+        <span>👤 <%= lakon.creator_name %></span>
+        <% if (lakon.deadline) { %><span>⏰ <%= new Date(lakon.deadline).toLocaleDateString('id-ID') %></span><% } %>
+        <span>👥 <%= lakon.participant_count || 0 %>/<%= lakon.slots %> pelakon</span>
+        <span class="text-amber-400 font-semibold">Rp<%= lakon.reward.toLocaleString('id-ID') %></span>
+        <span class="<%= lakon.status === 'published' ? 'text-emerald-400' : 'text-text2' %>"><%= lakon.status %></span>
+      </div>
+      <% if (lakon.description) { %><div class="glass p-5 text-sm text-text2 leading-relaxed mb-6"><%= lakon.description.replace(/\n/g, '<br>') %></div><% } %>
+    </div>
+
+    <!-- Action buttons -->
+    <% if (user) { %>
+    <div class="flex flex-wrap gap-3 mb-10">
+      <% if (lakon.status === 'published' && !isOwner && !hasSubmitted && !isFull) { %>
+        <form id="submitForm" enctype="multipart/form-data" class="flex flex-wrap gap-3 items-end">
+          <div>
+            <label class="text-xs text-text2 block mb-1">Upload Bukti (foto/link)</label>
+            <input type="file" name="proof" class="input-field !w-auto !py-2">
+          </div>
+          <div>
+            <label class="text-xs text-text2 block mb-1">Catatan</label>
+            <input type="text" name="note" class="input-field !p-2 !text-sm" placeholder="Deskripsi hasil...">
+          </div>
+          <button type="button" onclick="submitLakon(<%= lakon.id %>)" class="neon-btn px-6 py-2.5 font-semibold text-sm">Ambil Tantangan & Submit</button>
+        </form>
+      <% } else if (hasSubmitted) { %>
+        <p class="text-emerald-400 text-sm px-4 py-2 glass inline-block">✓ Kamu sudah submit bukti</p>
+      <% } else if (isFull) { %>
+        <p class="text-text2 text-sm">Slot penuh</p>
+      <% } %>
+      <% if (isOwner && lakon.status === 'published') { %>
+        <form action="/api/lakon/<%= lakon.id %>/dispute" method="POST" onsubmit="return confirm('Laporkan sengketa?')" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="px-4 py-2 rounded-xl border border-red-400/30 text-red-400 text-sm hover:bg-red-400/10 transition">Laporkan Sengketa</button>
+        </form>
+      <% } %>
+    </div>
+    <% } else { %>
+    <div class="glass p-6 text-center mb-10">
+      <p class="text-text2 mb-3">Masuk untuk ambil tantangan ini</p>
+      <a href="/login?redirect=/lakon/<%= lakon.id %>" class="neon-btn px-6 py-2.5 font-semibold text-sm inline-block">Masuk</a>
+    </div>
+    <% } %>
+
+    <!-- Submissions -->
+    <% if (submissions && submissions.length > 0) { %>
+    <h2 class="text-lg font-bold mb-4">Submission (<%= submissions.length %>)</h2>
+    <div class="space-y-3">
+      <% submissions.forEach(function(s) { %>
+        <div class="glass-card p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-medium"><%= s.user_name %></span>
+            <span class="badge <%= s.status==='approved'?'badge-digital':'badge-fun' %>"><%= s.status %></span>
+            <% if (s.note) { %><span class="text-text2 text-xs"><%= s.note %></span><% } %>
+          </div>
+          <% if (isOwner && s.status === 'submitted') { %>
+          <div class="flex gap-2">
+            <button onclick="verifySubmission(<%= lakon.id %>, <%= s.id %>, 'approve')" class="emerald-btn px-3 py-1.5 text-xs font-semibold">Setujui & Cairkan</button>
+            <button onclick="verifySubmission(<%= lakon.id %>, <%= s.id %>, 'reject')" class="px-3 py-1.5 rounded-xl border border-red-400/30 text-red-400 text-xs">Tolak</button>
+          </div>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+    <% } %>
+  </main>
+</div>
+
+<script>
+const csrfToken = '<%= csrfToken %>';
+async function submitLakon(id) {
+  const form = document.getElementById('submitForm');
+  const fd = new FormData(form);
+  const res = await fetch('/api/lakon/' + id + '/submit', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken }, body: fd });
+  const data = await res.json();
+  alert(data.success ? 'Berhasil submit!' : data.error);
+  if (data.success) location.reload();
+}
+async function verifySubmission(lakonId, subId, action) {
+  if (action === 'approve' && !confirm('Cairkan dana ke pemenang ini?')) return;
+  const res = await fetch('/api/lakon/' + lakonId + '/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify({ submissionId: subId, action })
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+  location.reload();
+}
+</script>

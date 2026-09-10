@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lakonan — Ada kerjaan. Ada hadiahnya.">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Lakonan' %>">
+  <meta property="og:description" content="Platform crowdsourcing tantangan & kerja lepas berbasis deposit & escrow.">
+  <meta property="og:type" content="website">
+  <title><%= typeof title !== 'undefined' ? title : 'Lakonan' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg': '#0a0a1a',
+            'surface': '#12122a',
+            'surface2': '#1a1a35',
+            'border': '#2a2a55',
+            'accent': '#8b5cf6',
+            'accent2': '#10b981',
+            'neon': '#a78bfa',
+            'text': '#e2e8f0',
+            'text2': '#94a3b8',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', sans-serif; background: #0a0a1a; color: #e2e8f0; }
+    .glass { background: rgba(18, 18, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; }
+    .glass-card { background: rgba(26, 26, 53, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.15); border-radius: 0.875rem; transition: all 0.3s ease; }
+    .glass-card:hover { border-color: rgba(139, 92, 246, 0.4); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(139, 92, 246, 0.12); }
+    .neon-text { background: linear-gradient(135deg, #a78bfa, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .neon-btn { background: linear-gradient(135deg, #7c3aed, #6366f1); border: none; color: white; border-radius: 0.75rem; transition: all 0.2s; }
+    .neon-btn:hover { box-shadow: 0 0 24px rgba(124, 58, 237, 0.5); transform: scale(1.02); }
+    .emerald-btn { background: linear-gradient(135deg, #059669, #10b981); border: none; color: white; border-radius: 0.75rem; transition: all 0.2s; }
+    .emerald-btn:hover { box-shadow: 0 0 24px rgba(16, 185, 129, 0.5); transform: scale(1.02); }
+    .badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; }
+    .badge-fun { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .badge-digital { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .badge-fisik { background: rgba(251, 146, 60, 0.2); color: #fb923c; }
+    .sidebar { transition: transform 0.3s ease; }
+    @media (max-width: 768px) { .sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 50; transform: translateX(-100%); } .sidebar.open { transform: translateX(0); } }
+    .input-field { width: 100%; padding: 0.75rem 1rem; background: rgba(26, 26, 53, 0.8); border: 1px solid #2a2a55; border-radius: 0.75rem; color: #e2e8f0; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+    .input-field:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
+    select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27%3E%3Cpath d=%27M6 8L1 3h10z%27 fill=%27%2394a3b8%27/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+  </style>
+</head>
+<body class="min-h-screen bg-bg text-text">
+  <%- include('sidebar') %>

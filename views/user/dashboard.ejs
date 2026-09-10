@@ -1,0 +1,68 @@
+<%- include('../partials/header') %>
+<div class="flex">
+  <%- include('../partials/sidebar') %>
+  <main class="flex-1 p-6 md:p-10 min-h-screen">
+    
+    <!-- Top bar: balance cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="glass-card p-5">
+        <p class="text-text2 text-xs mb-1">Saldo Aktif</p>
+        <p class="text-2xl font-black text-emerald-400">Rp<%= (user.balance || 0).toLocaleString('id-ID') %></p>
+      </div>
+      <div class="glass-card p-5">
+        <p class="text-text2 text-xs mb-1">Tertahan Escrow</p>
+        <p class="text-2xl font-black text-amber-400">Rp<%= (user.escrow_hold || 0).toLocaleString('id-ID') %></p>
+      </div>
+      <div class="glass-card p-5">
+        <p class="text-text2 text-xs mb-1">Total Pendapatan</p>
+        <p class="text-2xl font-black neon-text">Rp<%= (user.total_earned || 0).toLocaleString('id-ID') %></p>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="flex flex-wrap items-center gap-3 mb-6">
+      <div class="flex gap-1 bg-surface rounded-xl p-1">
+        <a href="/dashboard" class="px-4 py-2 rounded-lg text-sm font-medium transition <%= !category ? 'bg-accent/20 text-accent' : 'text-text2 hover:text-text' %>">Semua</a>
+        <a href="/dashboard?category=fun" class="px-4 py-2 rounded-lg text-sm font-medium transition <%= category === 'fun' ? 'bg-accent/20 text-accent' : 'text-text2 hover:text-text' %>">🎮 Seru</a>
+        <a href="/dashboard?category=digital" class="px-4 py-2 rounded-lg text-sm font-medium transition <%= category === 'digital' ? 'bg-accent/20 text-accent' : 'text-text2 hover:text-text' %>">💻 Digital</a>
+        <a href="/dashboard?category=fisik" class="px-4 py-2 rounded-lg text-sm font-medium transition <%= category === 'fisik' ? 'bg-accent/20 text-accent' : 'text-text2 hover:text-text' %>">🏃 Fisik</a>
+      </div>
+      <div class="flex-1"></div>
+      <form method="GET" action="/dashboard" class="flex gap-2">
+        <input type="hidden" name="category" value="<%= category %>">
+        <input type="text" name="search" value="<%= search %>" placeholder="Cari lakon..." class="input-field !w-48 !py-2 !text-sm">
+        <select name="sort" class="input-field !w-auto !py-2 !text-sm" onchange="this.form.submit()">
+          <option value="newest" <%= sort==='newest'?'selected':'' %>>Terbaru</option>
+          <option value="reward" <%= sort==='reward'?'selected':'' %>>Reward Tertinggi</option>
+          <option value="deadline" <%= sort==='deadline'?'selected':'' %>>Deadline Terdekat</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- Lakon grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <% if (lakons && lakons.length > 0) { %>
+        <% lakons.forEach(function(l) { %>
+          <a href="/lakon/<%= l.id %>" class="glass-card p-5 group">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="badge <%= l.category==='fun'?'badge-fun':l.category==='digital'?'badge-digital':'badge-fisik' %>"><%= l.category %></span>
+              <% if (l.deadline) { %>
+                <span class="text-xs text-text2"><%= new Date(l.deadline).toLocaleDateString('id-ID') %></span>
+              <% } %>
+            </div>
+            <h3 class="font-bold text-base mb-2 group-hover:text-accent transition line-clamp-2"><%= l.title %></h3>
+            <div class="flex items-center justify-between mt-4">
+              <span class="text-lg font-black text-amber-400">Rp<%= l.reward.toLocaleString('id-ID') %></span>
+              <span class="text-xs text-text2"><%= l.participant_count || 0 %>/<%= l.slots %> pelakon</span>
+            </div>
+          </a>
+        <% }); %>
+      <% } else { %>
+        <div class="col-span-full glass-card p-12 text-center">
+          <p class="text-4xl mb-4">📭</p>
+          <p class="text-text2">Belum ada lakon nih. <a href="/lakon/new" class="text-accent font-semibold">Buat yang pertama!</a></p>
+        </div>
+      <% } %>
+    </div>
+  </main>
+</div>

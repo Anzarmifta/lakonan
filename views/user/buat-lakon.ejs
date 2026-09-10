@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+<div class="flex">
+  <%- include('../partials/sidebar') %>
+  <main class="flex-1 p-6 md:p-10 max-w-3xl mx-auto">
+    <h1 class="text-2xl font-black mb-2 neon-text">Buat Lakon Baru</h1>
+    <p class="text-text2 text-sm mb-8">Isi detail lakon. Dana reward akan otomatis ditahan dari saldo kamu (escrow) sampai ada pemenang.</p>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="bg-red-400/10 border border-red-400/30 text-red-400 px-4 py-3 rounded-xl text-sm mb-6"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/lakon/new" enctype="multipart/form-data" class="flex flex-col gap-5">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div>
+        <label class="text-sm font-medium text-text2 mb-1.5 block">Judul Lakon *</label>
+        <input type="text" name="title" class="input-field" placeholder="Contoh: Makan 5 sambal level 10 dalam 3 menit" required minlength="5">
+      </div>
+      <div>
+        <label class="text-sm font-medium text-text2 mb-1.5 block">Kategori</label>
+        <select name="category" class="input-field">
+          <option value="fun">🎮 Seru-seruan</option>
+          <option value="digital">💻 Digital & Kerja</option>
+          <option value="fisik">🏃 Fisik & Errands</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-text2 mb-1.5 block">Deskripsi Tugas</label>
+        <textarea name="description" class="input-field" rows="4" placeholder="Jelaskan apa yang harus dikerjakan, aturan, dan cara buktinya..."></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-text2 mb-1.5 block">Reward (Rp) *</label>
+          <input type="number" name="reward" class="input-field" placeholder="50000" required min="1000">
+        </div>
+        <div>
+          <label class="text-sm font-medium text-text2 mb-1.5 block">Kuota Pekerja</label>
+          <input type="number" name="slots" class="input-field" value="1" min="1" max="100">
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-text2 mb-1.5 block">Deadline</label>
+        <input type="date" name="deadline" class="input-field">
+      </div>
+      <div>
+        <label class="text-sm font-medium text-text2 mb-1.5 block">Lampiran (opsional)</label>
+        <input type="file" name="attachment" class="input-field">
+      </div>
+      <button type="submit" class="neon-btn w-full py-3.5 font-semibold text-base mt-2">Buat Lakon & Deposit ke Escrow</button>
+    </form>
+  </main>
+</div>

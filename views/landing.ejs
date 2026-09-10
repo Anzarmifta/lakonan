@@ -1,0 +1,82 @@
+<%- include('partials/header') %>
+<main class="flex flex-col items-center">
+
+<!-- Hero -->
+<section class="w-full max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
+  <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-8 text-sm text-text2">
+    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> <%= stats.active_lakons || 0 %> lakon aktif sekarang
+  </div>
+  <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6">
+    <span class="neon-text">Lakonan</span>
+  </h1>
+  <p class="text-xl md:text-2xl text-text2 mb-4 max-w-2xl mx-auto font-medium">Ada kerjaan. Ada hadiahnya.</p>
+  <p class="text-text2 mb-10 max-w-xl mx-auto">Platform crowdsourcing tantangan & kerja lepas — Buat lakon, pasang reward, escrow aman, hasil dikerjakan orang terbaik.</p>
+  <div class="flex gap-4 justify-center flex-wrap">
+    <a href="/register" class="neon-btn px-8 py-3.5 font-semibold text-base">Mulai Tantangan</a>
+    <a href="/lakon/new" class="px-8 py-3.5 rounded-xl border border-border hover:border-accent/40 transition font-semibold text-base">Buat Lakon</a>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="w-full max-w-5xl mx-auto px-6 pb-16">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="glass-card p-8 text-center">
+      <p class="text-3xl font-black neon-text"><%= stats.completed || 0 %></p>
+      <p class="text-text2 text-sm mt-2">Total Lakon Selesai</p>
+    </div>
+    <div class="glass-card p-8 text-center">
+      <p class="text-3xl font-black text-emerald-400">Rp<%= ((stats.total_reward || 0)/1000000).toFixed(0) %>M+</p>
+      <p class="text-text2 text-sm mt-2">Total Reward Dibagikan</p>
+    </div>
+    <div class="glass-card p-8 text-center">
+      <p class="text-3xl font-black text-amber-400"><%= stats.total_users || 0 %></p>
+      <p class="text-text2 text-sm mt-2">Pelakon Terdaftar</p>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="w-full max-w-5xl mx-auto px-6 pb-20">
+  <h2 class="text-2xl font-bold text-center mb-10">Pilih Kategori Lakon</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <a href="/dashboard?category=fun" class="glass-card p-8 text-center group cursor-pointer">
+      <div class="text-5xl mb-4">🎮</div>
+      <h3 class="text-lg font-bold mb-2 group-hover:text-accent transition">Seru-seruan</h3>
+      <p class="text-text2 text-sm">Challenge seru, foto bukti, lucu-lucuan, & tantangan kreatif</p>
+    </a>
+    <a href="/dashboard?category=digital" class="glass-card p-8 text-center group cursor-pointer">
+      <div class="text-5xl mb-4">💻</div>
+      <h3 class="text-lg font-bold mb-2 group-hover:text-accent transition">Digital & Kerja</h3>
+      <p class="text-text2 text-sm">Design, coding, copywriting, editing, marketing freelance</p>
+    </a>
+    <a href="/dashboard?category=fisik" class="glass-card p-8 text-center group cursor-pointer">
+      <div class="text-5xl mb-4">🏃</div>
+      <h3 class="text-lg font-bold mb-2 group-hover:text-accent transition">Fisik & Errands</h3>
+      <p class="text-text2 text-sm">Tugas fisik, delivery, foto lokasi, survey, titip beli</p>
+    </a>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="w-full max-w-5xl mx-auto px-6 pb-20">
+  <h2 class="text-2xl font-bold text-center mb-10">Cara Kerja — 3 Langkah</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="text-center">
+      <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-5 text-2xl">📝</div>
+      <h3 class="font-bold mb-2">1. Buat / Ambil Lakon</h3>
+      <p class="text-text2 text-sm">Creator buat challenge & deposit reward ke escrow. Pelakon ambil yang cocok.</p>
+    </div>
+    <div class="text-center">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-400/20 flex items-center justify-center mx-auto mb-5 text-2xl">📤</div>
+      <h3 class="font-bold mb-2">2. Kerja & Upload Bukti</h3>
+      <p class="text-text2 text-sm">Kerjakan tugas, upload bukti hasil ke platform.</p>
+    </div>
+    <div class="text-center">
+      <div class="w-16 h-16 rounded-2xl bg-amber-400/20 flex items-center justify-center mx-auto mb-5 text-2xl">🔒</div>
+      <h3 class="font-bold mb-2">3. Cair / Escrow Aman</h3>
+      <p class="text-text2 text-sm">Creator verifikasi hasil. Dana escrow otomatis cair ke pemenang. Aman, transparan.</p>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

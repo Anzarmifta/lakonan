@@ -1,0 +1,36 @@
+<% if (typeof user !== 'undefined' && user) { %>
+<aside id="sidebar" class="sidebar w-64 bg-surface border-r border-border p-6 flex flex-col gap-6 z-50">
+  <div class="flex items-center gap-3 mb-4">
+    <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg"><%= (user.name || '?')[0].toUpperCase() %></div>
+    <div>
+      <p class="font-semibold text-sm"><%= user.name %></p>
+      <p class="text-xs text-text2">Rp<%= (user.balance || 0).toLocaleString('id-ID') %></p>
+    </div>
+  </div>
+  <nav class="flex flex-col gap-2 flex-1">
+    <a href="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface2 transition text-sm <%= (typeof currentPage !== 'undefined' && currentPage === 'dashboard') ? 'bg-accent/10 text-accent font-medium' : 'text-text2' %>">
+      <span>🏠</span> Beranda
+    </a>
+    <a href="/dashboard?category=fun" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface2 transition text-sm text-text2">
+      <span>🎮</span> Seru-seruan
+    </a>
+    <a href="/dashboard?category=digital" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface2 transition text-sm text-text2">
+      <span>💻</span> Digital
+    </a>
+    <a href="/dashboard?category=fisik" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface2 transition text-sm text-text2">
+      <span>🏃</span> Fisik
+    </a>
+    <hr class="border-border my-1" />
+    <a href="/lakon/new" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface2 transition text-sm text-text2">
+      <span>➕</span> Buat Lakon
+    </a>
+    <a href="/dompet" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface2 transition text-sm text-text2">
+      <span>💰</span> Dompet
+    </a>
+    <% if (user.role === 'admin') { %>
+    <a href="/admin" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface2 transition text-sm text-accent font-medium">⚙️ Admin</a>
+    <% } %>
+  </nav>
+  <a href="/logout" class="text-sm text-text2 hover:text-red-400 transition px-3 py-2">Keluar</a>
+</aside>
+<% } %>

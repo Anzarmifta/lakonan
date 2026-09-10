@@ -1,0 +1,31 @@
+{
+  "name": "lakonan",
+  "version": "1.0.0",
+  "description": "Platform challenge berhadiah — Ada kerjaan. Ada hadiahnya.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "connect-sqlite3": "^0.9.18",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "csrf-csrf": "^4.0.3",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "multer": "^2.3.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}

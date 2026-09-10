@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+<div class="flex">
+  <%- include('../partials/sidebar') %>
+  <main class="flex-1 p-6 md:p-10 max-w-3xl mx-auto">
+    <h1 class="text-2xl font-black mb-2 neon-text">Dompet</h1>
+    
+    <% if (typeof error !== 'undefined' && error) { %><div class="bg-red-400/10 border border-red-400/30 text-red-400 px-4 py-3 rounded-xl text-sm mb-4"><%= error %></div><% } %>
+    <% if (typeof success !== 'undefined' && success) { %><div class="bg-emerald-400/10 border border-emerald-400/30 text-emerald-400 px-4 py-3 rounded-xl text-sm mb-4"><%= success %></div><% } %>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div class="glass-card p-5 text-center">
+        <p class="text-text2 text-xs mb-1">Saldo Aktif</p>
+        <p class="text-3xl font-black text-emerald-400">Rp<%= (user.balance || 0).toLocaleString('id-ID') %></p>
+      </div>
+      <div class="glass-card p-5 text-center">
+        <p class="text-text2 text-xs mb-1">Tertahan Escrow</p>
+        <p class="text-3xl font-black text-amber-400">Rp<%= (user.escrow_hold || 0).toLocaleString('id-ID') %></p>
+      </div>
+    </div>
+
+    <div class="flex gap-4 mb-10 flex-wrap">
+      <form method="POST" action="/dompet/deposit" class="flex gap-2 items-end">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div><label class="text-xs text-text2 block mb-1">Jumlah (Rp)</label><input type="number" name="amount" class="input-field !w-36 !py-2 !text-sm" placeholder="100000" required min="1000"></div>
+        <button type="submit" class="emerald-btn px-5 py-2.5 font-semibold text-sm">Top Up</button>
+      </form>
+      <form method="POST" action="/dompet/withdraw" class="flex gap-2 items-end">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div><label class="text-xs text-text2 block mb-1">Jumlah (Rp)</label><input type="number" name="amount" class="input-field !w-36 !py-2 !text-sm" placeholder="50000" required min="10000"></div>
+        <button type="submit" class="px-5 py-2.5 rounded-xl border border-border hover:border-red-400/40 font-semibold text-sm transition">Tarik</button>
+      </form>
+    </div>
+
+    <h2 class="text-lg font-bold mb-4">Riwayat Transaksi</h2>
+    <div class="space-y-2">
+      <% if (transactions && transactions.length > 0) { %>
+        <% transactions.forEach(function(t) { %>
+          <div class="glass-card p-4 flex justify-between items-center">
+            <div>
+              <p class="text-sm font-medium"><%= t.type === 'deposit' ? '💰 Top Up' : t.type === 'withdrawal' ? '🏦 Tarik' : t.type === 'escrow_hold' ? '🔒 Tahan Escrow' : t.type === 'reward' ? '🎉 Reward' : t.type %></p>
+              <p class="text-xs text-text2"><%= t.description %></p>
+            </div>
+            <span class="font-semibold text-sm <%= t.amount >= 0 ? 'text-emerald-400' : 'text-red-400' %>"><%= t.amount >= 0 ? '+' : '' %>Rp<%= Math.abs(t.amount).toLocaleString('id-ID') %></span>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p class="text-text2 text-sm">Belum ada transaksi.</p>
+      <% } %>
+    </div>
+  </main>
+</div>

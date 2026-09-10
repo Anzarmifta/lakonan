@@ -1,0 +1,8 @@
+<%- include('partials/header') %>
+<main class="min-h-screen flex items-center justify-center px-6">
+  <div class="glass p-10 text-center max-w-md">
+    <p class="text-5xl mb-4">⚠️</p>
+    <h1 class="text-xl font-bold mb-2"><%= typeof message !== 'undefined' ? message : 'Terjadi kesalahan' %></h1>
+    <a href="/dashboard" class="text-accent text-sm hover:underline mt-4 inline-block">Kembali ke Dashboard</a>
+  </div>
+</main>
