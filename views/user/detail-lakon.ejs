@@ -10,8 +10,8 @@
       <div class="flex flex-wrap gap-4 text-sm text-text2 mb-4">
         <span>👤 <%= lakon.creator_name %></span>
         <% if (lakon.deadline) { %><span>⏰ <%= new Date(lakon.deadline).toLocaleDateString('id-ID') %></span><% } %>
-        <span>👥 <%= lakon.participant_count || 0 %>/<%= lakon.slots %> pelakon</span>
-        <span class="text-amber-400 font-semibold">Rp<%= lakon.reward.toLocaleString('id-ID') %></span>
+        <span>👥 <%= lakon.paid_slots || 0 %>/<%= lakon.slots %> terbayar</span>
+        <span class="text-amber-400 font-semibold">Rp<%= lakon.reward.toLocaleString('id-ID') %><% if (lakon.slots > 1) { %> / orang<% } %></span>
         <span class="<%= lakon.status === 'published' ? 'text-emerald-400' : 'text-text2' %>"><%= lakon.status %></span>
       </div>
       <% if (lakon.description) { %><div class="glass p-5 text-sm text-text2 leading-relaxed mb-6"><%= lakon.description.replace(/\n/g, '<br>') %></div><% } %>
@@ -37,11 +37,9 @@
       <% } else if (isFull) { %>
         <p class="text-text2 text-sm">Slot penuh</p>
       <% } %>
-      <% if (isOwner && lakon.status === 'published') { %>
-        <form action="/api/lakon/<%= lakon.id %>/dispute" method="POST" onsubmit="return confirm('Laporkan sengketa?')" class="inline">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button type="submit" class="px-4 py-2 rounded-xl border border-red-400/30 text-red-400 text-sm hover:bg-red-400/10 transition">Laporkan Sengketa</button>
-        </form>
+      <% if (isOwner && !['completed','cancelled'].includes(lakon.status)) { %>
+        <button onclick="closeLakon(<%= lakon.id %>, <%= sisaSlot %>)" class="px-4 py-2 rounded-xl border border-border text-text2 text-sm hover:text-text transition">Tutup Lakon &amp; Refund Sisa Slot</button>
+        <button onclick="bukaSengketa(<%= lakon.id %>)" class="px-4 py-2 rounded-xl border border-red-400/30 text-red-400 text-sm hover:bg-red-400/10 transition">Laporkan Sengketa</button>
       <% } %>
     </div>
     <% } else { %>
@@ -105,7 +103,7 @@ async function submitLakon(id) {
   }
 }
 async function verifySubmission(lakonId, subId, action) {
-  if (action === 'approve' && !confirm('Cairkan dana ke pemenang ini?')) return;
+  if (action === 'approve' && !confirm('Bayar reward ke pelakon ini? Dana langsung cair dari escrow.')) return;
   const res = await fetch('/api/lakon/' + lakonId + '/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
@@ -114,5 +112,26 @@ async function verifySubmission(lakonId, subId, action) {
   const data = await res.json();
   alert(data.message || data.error);
   location.reload();
+}
+async function bukaSengketa(lakonId) {
+  const reason = prompt('Kenapa mau lapor sengketa?');
+  if (reason === null) return;
+  const res = await fetch('/api/lakon/' + lakonId + '/dispute', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify({ reason })
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+}
+async function closeLakon(lakonId, sisa) {
+  if (!confirm('Tutup lakon ini?' + (sisa > 0 ? ' Sisa ' + sisa + ' slot akan direfund ke saldo kamu.' : ''))) return;
+  const res = await fetch('/api/lakon/' + lakonId + '/close', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
+  });
+  const data = await res.json();
+  alert(data.message || data.error);
+  if (data.success) location.reload();
 }
 </script>

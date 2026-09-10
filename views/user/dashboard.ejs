@@ -52,8 +52,11 @@
             </div>
             <h3 class="font-bold text-base mb-2 group-hover:text-accent transition line-clamp-2"><%= l.title %></h3>
             <div class="flex items-center justify-between mt-4">
-              <span class="text-lg font-black text-amber-400">Rp<%= l.reward.toLocaleString('id-ID') %></span>
-              <span class="text-xs text-text2"><%= l.participant_count || 0 %>/<%= l.slots %> pelakon</span>
+              <div>
+                <span class="text-lg font-black text-amber-400">Rp<%= l.reward.toLocaleString('id-ID') %></span>
+                <% if (l.slots > 1) { %><span class="text-xs text-text2 ml-1">/ orang</span><% } %>
+              </div>
+              <span class="text-xs text-text2"><%= l.paid_slots || 0 %>/<%= l.slots %> terbayar</span>
             </div>
           </a>
         <% }); %>

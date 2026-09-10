@@ -54,8 +54,9 @@ exports.detailPage = (req, res) => {
   if (!lakon) return res.status(404).render('error', { title: '404', message: 'Lakon tidak ditemukan', user: req.user });
   const submissions = db.findSubmissions(lakon.id);
   const isOwner = req.user && lakon.creator_id === req.user.id;
-  const hasSubmitted = req.user ? submissions.some(s => s.user_id === req.user.id) : false;
+  const hasSubmitted = req.user ? submissions.some(s => s.user_id === req.user.id && s.status !== 'rejected') : false;
   const isFull = lakon.participant_count >= lakon.slots;
+  const sisaSlot = Math.max(0, lakon.slots - (lakon.paid_slots || 0));
 
   res.render('user/detail-lakon', {
     title: lakon.title + ' — Lakonan',
@@ -65,6 +66,7 @@ exports.detailPage = (req, res) => {
     isOwner,
     hasSubmitted,
     isFull,
+    sisaSlot,
   });
 };
 
@@ -75,7 +77,8 @@ exports.submitAction = (req, res) => {
   if (lakon.creator_id === req.user.id) return res.json({ error: 'Tidak bisa submit lakon sendiri' });
   if (lakon.participant_count >= lakon.slots) return res.json({ error: 'Slot sudah penuh' });
 
-  const existing = db.findSubmissions(lakonId).filter(s => s.user_id === req.user.id);
+  // Boleh submit lagi kalau submission sebelumnya ditolak
+  const existing = db.findSubmissions(lakonId).filter(s => s.user_id === req.user.id && s.status !== 'rejected');
   if (existing.length > 0) return res.json({ error: 'Kamu sudah submit' });
 
   const proofFile = req.file ? req.file.filename : null;
@@ -87,6 +90,7 @@ exports.submitAction = (req, res) => {
 exports.verifySubmission = (req, res) => {
   const lakon = db.findLakonById(parseInt(req.params.id));
   if (!lakon || lakon.creator_id !== req.user.id) return res.json({ error: 'Bukan pembuat lakon' });
+  if (['completed','cancelled'].includes(lakon.status)) return res.json({ error: 'Lakon sudah ditutup' });
 
   const { submissionId, action } = req.body; // action: 'approve' | 'reject'
   const submissionIdNum = parseInt(submissionId);
@@ -97,22 +101,44 @@ exports.verifySubmission = (req, res) => {
   if (!sub) return res.json({ error: 'Submission tidak ditemukan di lakon ini' });
 
   if (action === 'approve') {
-    // Cegah double-approve: status sudah approved -> tolak
     if (sub.status === 'approved') return res.json({ error: 'Submission ini sudah disetujui' });
     db.updateSubmission(submissionIdNum, { status: 'approved' });
+    let info;
     try {
-      db.releaseEscrow(lakon.id, sub.user_id);
+      info = db.releaseEscrow(lakon.id, sub.user_id);
     } catch (err) {
-      db.updateSubmission(submissionIdNum, { status: 'submitted' }); // rollback status jika escrow gagal
+      db.updateSubmission(submissionIdNum, { status: 'submitted' }); // rollback jika escrow gagal
       return res.json({ error: err.message });
     }
-    return res.json({ success: true, message: 'Pemenang dipilih! Dana escrow dicairkan.' });
+    return res.json({
+      success: true,
+      message: info.done
+        ? 'Dibayar! Semua slot terisi, lakon selesai.'
+        : 'Dibayar! Slot terisi ' + info.paid + '/' + info.slots + ', masih bisa terima pelakon lain.',
+    });
   } else if (action === 'reject') {
-    if (sub.status === 'approved') return res.json({ error: 'Tidak bisa menolak submission yang sudah disetujui' });
+    if (sub.status === 'approved') return res.json({ error: 'Tidak bisa menolak submission yang sudah dibayar' });
     db.updateSubmission(submissionIdNum, { status: 'rejected' });
-    return res.json({ success: true, message: 'Submission ditolak' });
+    // Buka lagi slot-nya supaya orang lain bisa ambil
+    db.getDb().prepare('UPDATE lakons SET participant_count = MAX(0, participant_count - 1) WHERE id = ?').run(lakon.id);
+    return res.json({ success: true, message: 'Submission ditolak. Slot dibuka lagi.' });
   } else {
     return res.json({ error: 'Aksi tidak dikenal' });
+  }
+};
+
+// Tutup lakon lebih awal: sisa slot direfund ke saldo creator
+exports.closeAction = (req, res) => {
+  const lakon = db.findLakonById(parseInt(req.params.id));
+  if (!lakon || lakon.creator_id !== req.user.id) return res.json({ error: 'Bukan pembuat lakon' });
+  try {
+    const r = db.closeLakon(lakon.id);
+    return res.json({
+      success: true,
+      message: 'Lakon ditutup.' + (r.refund > 0 ? ' Sisa ' + r.sisa + ' slot dikembalikan: Rp' + r.refund.toLocaleString('id-ID') : ''),
+    });
+  } catch (err) {
+    return res.json({ error: err.message });
   }
 };
 

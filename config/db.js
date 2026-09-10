@@ -90,6 +90,12 @@ function migrate() {
     CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
     CREATE INDEX IF NOT EXISTS idx_submissions_lakon ON submissions(lakon_id);
   `);
+
+  // Migrasi ringan: kolom paid_slots (jumlah pelakon yang sudah dibayar)
+  const cols = getDb().prepare("PRAGMA table_info(lakons)").all().map(c => c.name);
+  if (!cols.includes('paid_slots')) {
+    getDb().exec('ALTER TABLE lakons ADD COLUMN paid_slots INTEGER NOT NULL DEFAULT 0');
+  }
 }
 
 // User helpers
@@ -125,16 +131,17 @@ function createLakon({ creatorId, title, description, category, reward, slots, d
   return findLakonById(r.lastInsertRowid);
 }
 
-// Atomic: create lakon + hold escrow dalam 1 DB transaction
+// Atomic: create lakon + hold escrow (reward PER ORANG x slots) dalam 1 DB transaction
 function createLakonWithEscrow({ creatorId, title, description, category, reward, slots, deadline, attachment }) {
   const d = getDb();
   const txn = d.transaction(() => {
     const user = findUserById(creatorId);
     if (!user) throw new Error('User tidak ditemukan');
-    if (user.balance < reward) throw new Error('Saldo tidak mencukupi untuk escrow. Top up dulu di Dompet.');
+    const total = reward * slots;
+    if (user.balance < total) throw new Error('Saldo tidak cukup. Butuh Rp' + total.toLocaleString('id-ID') + ' (Rp' + reward.toLocaleString('id-ID') + ' x ' + slots + ' orang). Top up dulu di Dompet.');
     const lakon = createLakon({ creatorId, title, description, category, reward, slots, deadline, attachment });
-    d.prepare('UPDATE users SET balance = balance - ?, escrow_hold = escrow_hold + ? WHERE id = ?').run(reward, reward, creatorId);
-    createTransaction({ userId: creatorId, type: 'escrow_hold', amount: -reward, referenceId: lakon.id, description: 'Dana ditahan escrow' });
+    d.prepare('UPDATE users SET balance = balance - ?, escrow_hold = escrow_hold + ? WHERE id = ?').run(total, total, creatorId);
+    createTransaction({ userId: creatorId, type: 'escrow_hold', amount: -total, referenceId: lakon.id, description: 'Escrow ' + slots + ' slot x Rp' + reward.toLocaleString('id-ID') });
     return lakon;
   });
   return txn();
@@ -221,28 +228,55 @@ function holdEscrow(userId, lakonId, amount) {
   return txn();
 }
 
-// Release escrow to winner
+// Release escrow ke 1 pelakon (reward per orang). Bisa dipanggil berkali-kali
+// sampai semua slot terbayar -> lakon otomatis completed.
 function releaseEscrow(lakonId, winnerId) {
   const d = getDb();
   const txn = d.transaction(() => {
-    // Anti double-payout: hanya sekali per lakon
     const lakon = findLakonById(lakonId);
     if (!lakon) throw new Error('Lakon tidak ditemukan');
-    if (lakon.status !== 'in_progress' && lakon.status !== 'published') {
-      throw new Error('Lakon sudah selesai/closed, payout ganda dicegah');
+    if (['completed','cancelled'].includes(lakon.status)) {
+      throw new Error('Lakon sudah ditutup, payout ganda dicegah');
     }
     const sub = d.prepare(
       'SELECT id FROM submissions WHERE lakon_id = ? AND user_id = ? AND status = ?'
     ).get(lakonId, winnerId, 'approved');
-    if (!sub) throw new Error('Pemenang belum terverifikasi');
-    // Escrow di release dari CREATOR (yang bayar di awal), reward ke WINNER
-    d.prepare('UPDATE users SET escrow_hold = escrow_hold - ? WHERE id = ?').run(lakon.reward, lakon.creator_id);
-    d.prepare('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?').run(lakon.reward, lakon.reward, winnerId);
-    createTransaction({ userId: winnerId, type: 'reward', amount: lakon.reward, referenceId: lakonId, description: 'Reward dari escrow' });
-    createTransaction({ userId: lakon.creator_id, type: 'escrow_release', amount: 0, referenceId: lakonId, description: 'Escrow dilepas ke pemenang' });
-    d.prepare('UPDATE lakons SET status = ?, winner_id = ?, participant_count = participant_count WHERE id = ?').run('completed', winnerId, lakonId);
+    if (!sub) throw new Error('Pelakon belum terverifikasi');
+    if (lakon.paid_slots >= lakon.slots) throw new Error('Semua slot sudah dibayar');
+
+    const per = lakon.reward;
+    // escrow berkurang dari CREATOR, reward masuk ke PELAKON
+    d.prepare('UPDATE users SET escrow_hold = escrow_hold - ? WHERE id = ?').run(per, lakon.creator_id);
+    d.prepare('UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE id = ?').run(per, per, winnerId);
+    createTransaction({ userId: winnerId, type: 'reward', amount: per, referenceId: lakonId, description: 'Reward lakon #' + lakonId });
+    createTransaction({ userId: lakon.creator_id, type: 'escrow_release', amount: 0, referenceId: lakonId, description: 'Escrow cair ke pelakon' });
+
+    const paid = lakon.paid_slots + 1;
+    const done = paid >= lakon.slots;
+    d.prepare('UPDATE lakons SET paid_slots = ?, winner_id = ?, status = ?, updated_at = datetime(\'now\') WHERE id = ?')
+      .run(paid, winnerId, done ? 'completed' : lakon.status, lakonId);
+    return { paid, slots: lakon.slots, done };
   });
-  txn();
+  return txn();
+}
+
+// Tutup lakon lebih awal: sisa slot yang belum dibayar direfund ke creator
+function closeLakon(lakonId) {
+  const d = getDb();
+  const txn = d.transaction(() => {
+    const lakon = findLakonById(lakonId);
+    if (!lakon) throw new Error('Lakon tidak ditemukan');
+    if (['completed','cancelled'].includes(lakon.status)) throw new Error('Lakon sudah ditutup');
+    const sisa = Math.max(0, lakon.slots - (lakon.paid_slots || 0));
+    const refund = sisa * lakon.reward;
+    if (refund > 0) {
+      d.prepare('UPDATE users SET escrow_hold = escrow_hold - ?, balance = balance + ? WHERE id = ?').run(refund, refund, lakon.creator_id);
+      createTransaction({ userId: lakon.creator_id, type: 'refund', amount: refund, referenceId: lakonId, description: 'Refund sisa ' + sisa + ' slot' });
+    }
+    d.prepare('UPDATE lakons SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').run('completed', lakonId);
+    return { refund, sisa };
+  });
+  return txn();
 }
 
 // ACID wallet: deposit
@@ -269,16 +303,23 @@ function debitUser(userId, amount, type, description, referenceId) {
   txn();
 }
 
-// Refund escrow back to creator
+// Refund escrow back to creator (sisa slot yang belum dibayar)
 function refundEscrow(lakonId) {
   const d = getDb();
   const txn = d.transaction(() => {
     const lakon = findLakonById(lakonId);
-    d.prepare('UPDATE users SET escrow_hold = escrow_hold - ?, balance = balance + ? WHERE id = ?').run(lakon.reward, lakon.reward, lakon.creator_id);
-    createTransaction({ userId: lakon.creator_id, type: 'refund', amount: lakon.reward, referenceId: lakonId, description: 'Refund escrow' });
-    d.prepare('UPDATE lakons SET status = ? WHERE id = ?').run('cancelled', lakonId);
+    if (!lakon) throw new Error('Lakon tidak ditemukan');
+    if (lakon.status === 'cancelled') throw new Error('Lakon sudah direfund');
+    const sisa = Math.max(0, lakon.slots - (lakon.paid_slots || 0));
+    const refund = sisa * lakon.reward;
+    if (refund > 0) {
+      d.prepare('UPDATE users SET escrow_hold = escrow_hold - ?, balance = balance + ? WHERE id = ?').run(refund, refund, lakon.creator_id);
+      createTransaction({ userId: lakon.creator_id, type: 'refund', amount: refund, referenceId: lakonId, description: 'Refund sengketa (' + sisa + ' slot)' });
+    }
+    d.prepare('UPDATE lakons SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').run('cancelled', lakonId);
+    return { refund };
   });
-  txn();
+  return txn();
 }
 
 // Dispute
@@ -315,6 +356,6 @@ module.exports = {
   createLakon, createLakonWithEscrow, findLakonById, findLakons, countLakons, updateLakon, isLakonOwner,
   createSubmission, findSubmissions, updateSubmission,
   createTransaction, getUserTransactions, getAllTransactions,
-  holdEscrow, releaseEscrow, refundEscrow, creditUser, debitUser,
+  holdEscrow, releaseEscrow, refundEscrow, closeLakon, creditUser, debitUser,
   createDispute, findDisputes, getStats,
 };

@@ -10,7 +10,12 @@
     <span class="neon-text">Lakonan</span>
   </h1>
   <p class="text-xl md:text-2xl text-text2 mb-4 max-w-2xl mx-auto font-medium">Ada kerjaan. Ada hadiahnya.</p>
-  <p class="text-text2 mb-10 max-w-xl mx-auto">Platform crowdsourcing tantangan & kerja lepas — Buat lakon, pasang reward, escrow aman, hasil dikerjakan orang terbaik.</p>
+  <p class="text-text2 mb-6 max-w-xl mx-auto">Suruh orang ngapain aja — seru-seruan, bantu tugas, sampai kerjaan receh. <span class="text-text">Siapa aja bisa ikut</span>, nggak perlu CV atau keahlian khusus.</p>
+  <div class="flex flex-wrap justify-center gap-2 mb-10 text-xs text-text2">
+    <span class="glass px-3 py-1.5 rounded-full">Tanpa syarat skill</span>
+    <span class="glass px-3 py-1.5 rounded-full">Duit aman di escrow</span>
+    <span class="glass px-3 py-1.5 rounded-full">Bayaran cair per orang</span>
+  </div>
   <div class="flex gap-4 justify-center flex-wrap">
     <a href="/register" class="neon-btn px-8 py-3.5 font-semibold text-base">Mulai Tantangan</a>
     <a href="/lakon/new" class="px-8 py-3.5 rounded-xl border border-border hover:border-accent/40 transition font-semibold text-base">Buat Lakon</a>
@@ -25,7 +30,7 @@
       <p class="text-text2 text-sm mt-2">Total Lakon Selesai</p>
     </div>
     <div class="glass-card p-8 text-center">
-      <p class="text-3xl font-black text-emerald-400">Rp<%= ((stats.total_reward || 0)/1000000).toFixed(0) %>M+</p>
+      <p class="text-3xl font-black text-emerald-400">Rp<%= (stats.total_reward || 0).toLocaleString('id-ID') %></p>
       <p class="text-text2 text-sm mt-2">Total Reward Dibagikan</p>
     </div>
     <div class="glass-card p-8 text-center">

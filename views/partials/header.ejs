@@ -1,54 +1,81 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Lakonan — Ada kerjaan. Ada hadiahnya.">
   <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Lakonan' %>">
-  <meta property="og:description" content="Platform crowdsourcing tantangan & kerja lepas berbasis deposit & escrow.">
+  <meta property="og:description" content="Suruh orang ngapain aja. Siapa aja bisa ikut.">
   <meta property="og:type" content="website">
   <title><%= typeof title !== 'undefined' ? title : 'Lakonan' %></title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            'bg': '#0a0a1a',
-            'surface': '#12122a',
-            'surface2': '#1a1a35',
-            'border': '#2a2a55',
-            'accent': '#8b5cf6',
-            'accent2': '#10b981',
-            'neon': '#a78bfa',
-            'text': '#e2e8f0',
-            'text2': '#94a3b8',
-          }
+            'bg': '#F8F9FE',
+            'surface': '#FFFFFF',
+            'surface2': '#F4F5FF',
+            'border': '#E6E8F7',
+            'accent': '#575DE6',
+            'accent2': '#10B981',
+            'neon': '#575DE6',
+            'text': '#191A33',
+            'text2': '#5E6091',
+            'muted': '#ABABCC',
+          },
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
         }
       }
     }
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #0a0a1a; color: #e2e8f0; }
-    .glass { background: rgba(18, 18, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; }
-    .glass-card { background: rgba(26, 26, 53, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.15); border-radius: 0.875rem; transition: all 0.3s ease; }
-    .glass-card:hover { border-color: rgba(139, 92, 246, 0.4); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(139, 92, 246, 0.12); }
-    .neon-text { background: linear-gradient(135deg, #a78bfa, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .neon-btn { background: linear-gradient(135deg, #7c3aed, #6366f1); border: none; color: white; border-radius: 0.75rem; transition: all 0.2s; }
-    .neon-btn:hover { box-shadow: 0 0 24px rgba(124, 58, 237, 0.5); transform: scale(1.02); }
-    .emerald-btn { background: linear-gradient(135deg, #059669, #10b981); border: none; color: white; border-radius: 0.75rem; transition: all 0.2s; }
-    .emerald-btn:hover { box-shadow: 0 0 24px rgba(16, 185, 129, 0.5); transform: scale(1.02); }
-    .badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; }
-    .badge-fun { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
-    .badge-digital { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .badge-fisik { background: rgba(251, 146, 60, 0.2); color: #fb923c; }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #F8F9FE; color: #191A33; -webkit-font-smoothing: antialiased; }
+
+    /* Kartu putih lembut ala disuruh.com */
+    .glass { background: #FFFFFF; border: 1px solid #E9EBF8; border-radius: 1.25rem; box-shadow: 0 1px 2px rgba(25,26,51,0.04); }
+    .glass-card { background: #FFFFFF; border: 1px solid #E9EBF8; border-radius: 1.25rem; box-shadow: 0 1px 2px rgba(25,26,51,0.04); transition: all .2s ease; }
+    .glass-card:hover { border-color: #C9CCF0; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(87,93,230,0.10); }
+
+    .neon-text { color: #191A33; }
+    .neon-text-accent { color: #575DE6; }
+
+    /* Tombol utama: navy gelap seperti tombol DAFTAR disuruh.com */
+    .neon-btn { background: #191A33; border: none; color: #FFFFFF; border-radius: 0.875rem; transition: all .2s; }
+    .neon-btn:hover { background: #2A2B4D; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(25,26,51,0.18); }
+    /* Tombol sekunder: indigo */
+    .emerald-btn { background: #575DE6; border: none; color: #FFFFFF; border-radius: 0.875rem; transition: all .2s; }
+    .emerald-btn:hover { background: #4147C9; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(87,93,230,0.25); }
+
+    .badge { display: inline-block; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
+    .badge-fun { background: #EEF0FE; color: #575DE6; }
+    .badge-digital { background: #E7F8F1; color: #0E9F6E; }
+    .badge-fisik { background: #FFF4E5; color: #B45309; }
+
     .sidebar { transition: transform 0.3s ease; }
-    @media (max-width: 768px) { .sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 50; transform: translateX(-100%); } .sidebar.open { transform: translateX(0); } }
-    .input-field { width: 100%; padding: 0.75rem 1rem; background: rgba(26, 26, 53, 0.8); border: 1px solid #2a2a55; border-radius: 0.75rem; color: #e2e8f0; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
-    .input-field:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
-    select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27%3E%3Cpath d=%27M6 8L1 3h10z%27 fill=%27%2394a3b8%27/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+    @media (max-width: 768px) { .sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 50; transform: translateX(-100%); background: #FFFFFF; } .sidebar.open { transform: translateX(0); } }
+
+    .input-field { width: 100%; padding: 0.75rem 1rem; background: #FFFFFF; border: 1px solid #E3E5F5; border-radius: 0.875rem; color: #191A33; font-size: 0.95rem; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .input-field:focus { border-color: #575DE6; box-shadow: 0 0 0 3px rgba(87,93,230,0.12); }
+    .input-field::placeholder { color: #ABABCC; }
+    select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27%3E%3Cpath d=%27M6 8L1 3h10z%27 fill=%27%235E6091%27/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+
+    /* Penyesuaian warna teks agar terbaca di tema terang */
+    .text-emerald-400, .text-emerald-300 { color: #0E9F6E !important; }
+    .text-amber-400, .text-amber-300 { color: #D97706 !important; }
+    .text-red-400, .text-red-300 { color: #DC2626 !important; }
+    .text-violet-400, .text-violet-300 { color: #575DE6 !important; }
+    .border-red-400\/30, .border-red-400\/40 { border-color: #F6C6C6 !important; }
+    .border-emerald-400\/30 { border-color: #B7E7D3 !important; }
+    .bg-red-400\/10 { background: #FEF2F2 !important; }
+    .bg-emerald-400\/10 { background: #ECFDF5 !important; }
+    .bg-emerald-400\/20 { background: #D1FAE5 !important; }
+    .bg-emerald-400 { background: #10B981 !important; }
+    .bg-amber-400\/20 { background: #FEF3C7 !important; }
+    .bg-violet-500\/30 { background: #EEF0FE !important; }
+    .bg-accent\/20 { background: #EEF0FE !important; }
   </style>
 </head>
 <body class="min-h-screen bg-bg text-text">

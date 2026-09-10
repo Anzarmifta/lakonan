@@ -105,6 +105,7 @@ app.post('/lakon/new', requireAuth, upload.single('attachment'), csrfProtect, la
 app.get('/lakon/:id', lakonCtrl.detailPage);
 app.post('/api/lakon/:id/submit', requireAuth, csrfProtect, upload.single('proof'), lakonCtrl.submitAction);
 app.post('/api/lakon/:id/verify', requireAuth, csrfProtect, lakonCtrl.verifySubmission);
+app.post('/api/lakon/:id/close', requireAuth, csrfProtect, lakonCtrl.closeAction);
 app.post('/api/lakon/:id/dispute', requireAuth, csrfProtect, lakonCtrl.disputeAction);
 
 // Wallet
