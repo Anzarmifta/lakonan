@@ -67,11 +67,16 @@ const uploadDir = path.join(dbDir, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const upload = multer({
   dest: uploadDir,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','application/pdf','application/zip'];
+    const allowed = [
+      'image/jpeg','image/jpg','image/pjpeg','image/png','image/webp','image/gif',
+      'image/heic','image/heif','image/avif',
+      'video/mp4','video/webm','video/quicktime','video/x-msvideo',
+      'application/pdf','application/zip',
+    ];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Tipe file tidak diizinkan'));
+    else cb(new Error('Tipe file tidak didukung (' + file.mimetype + '). Pakai JPG, PNG, WEBP, HEIC, MP4, atau PDF.'));
   }
 });
 
@@ -96,7 +101,7 @@ app.get('/logout', authCtrl.logout);
 // User dashboard
 app.get('/dashboard', requireAuth, lakonCtrl.dashboard);
 app.get('/lakon/new', requireAuth, lakonCtrl.createPage);
-app.post('/lakon/new', requireAuth, csrfProtect, upload.single('attachment'), lakonCtrl.createAction);
+app.post('/lakon/new', requireAuth, upload.single('attachment'), csrfProtect, lakonCtrl.createAction);
 app.get('/lakon/:id', lakonCtrl.detailPage);
 app.post('/api/lakon/:id/submit', requireAuth, csrfProtect, upload.single('proof'), lakonCtrl.submitAction);
 app.post('/api/lakon/:id/verify', requireAuth, csrfProtect, lakonCtrl.verifySubmission);
@@ -118,6 +123,19 @@ app.post('/api/admin/dispute/:id', requireAuth, requireAdmin, csrfProtect, admin
 // ═══════════════════════════════════════════
 // ERROR HANDLING
 // ═══════════════════════════════════════════
+
+// Upload/multer errors: balikin JSON untuk API, render ulang form untuk halaman
+app.use((err, req, res, next) => {
+  const isUpload = err instanceof multer.MulterError || /Tipe file|File too large|Unexpected field|lainnya/i.test(err.message || '');
+  if (isUpload) {
+    const msg = err.code === 'LIMIT_FILE_SIZE'
+      ? 'Ukuran file terlalu besar (maksimal 25MB).'
+      : (err.message || 'Upload gagal.');
+    if (req.path.startsWith('/api/')) return res.status(400).json({ error: msg });
+    return res.status(400).render('user/buat-lakon', { title: 'Buat Lakon — Lakonan', user: req.user, error: msg });
+  }
+  next(err);
+});
 
 app.use((req, res) => {
   res.status(404).render('error', { title: '404 — Lakonan', message: 'Halaman tidak ditemukan', user: req.user });

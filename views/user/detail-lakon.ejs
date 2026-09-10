@@ -79,11 +79,30 @@
 const csrfToken = '<%= csrfToken %>';
 async function submitLakon(id) {
   const form = document.getElementById('submitForm');
+  const fileInput = form.querySelector('input[type="file"]');
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    alert('Pilih foto atau video bukti dulu ya.');
+    return;
+  }
   const fd = new FormData(form);
-  const res = await fetch('/api/lakon/' + id + '/submit', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken }, body: fd });
-  const data = await res.json();
-  alert(data.success ? 'Berhasil submit!' : data.error);
-  if (data.success) location.reload();
+  const btn = form.querySelector('button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
+  try {
+    const res = await fetch('/api/lakon/' + id + '/submit', {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': csrfToken },
+      body: fd
+    });
+    let data;
+    try { data = await res.json(); }
+    catch (e) { data = { error: 'Server menolak upload (HTTP ' + res.status + '). Coba file lain yang lebih kecil / format JPG-PNG-MP4.' }; }
+    alert(data.success ? 'Berhasil submit!' : (data.error || 'Gagal submit'));
+    if (data.success) location.reload();
+  } catch (e) {
+    alert('Koneksi gagal: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Ambil Tantangan & Submit'; }
+  }
 }
 async function verifySubmission(lakonId, subId, action) {
   if (action === 'approve' && !confirm('Cairkan dana ke pemenang ini?')) return;
